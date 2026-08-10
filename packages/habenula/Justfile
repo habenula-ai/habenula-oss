@@ -1,0 +1,29 @@
+# Habenula umbrella-package recipes (the unscoped npm front door)
+
+# Show available commands
+default:
+    @just --list
+
+# Run the forwarder tests. The files are named, not discovered: `node --test`
+# with no path exits 0 when it finds nothing, so a renamed or moved suite
+# would report green having run nothing — this is the only suite that proves
+# the published front door works. A new suite is added to this line.
+# The spawn tests execute the CLI bundle, so build it first (`just cli-build`
+# from the repository root); a missing bundle fails with that instruction,
+# never a silent skip.
+test:
+    node --test test/forwarder.test.mjs
+
+# No typecheck: the forwarder is plain JavaScript, and the CLI it loads
+# typechecks in packages/cli (precedent: the contracts test recipe).
+typecheck:
+    @echo "habenula: no typecheck (plain-JS forwarder; the CLI it loads typechecks in packages/cli)."
+
+# ESLint + dependency pin check
+lint:
+    npx eslint bin.js test/
+    node ../../scripts/check-pinned-deps.cjs
+
+# All pre-commit checks: lint, typecheck, test
+pre-commit: lint typecheck test
+    @echo "Umbrella checks passed."

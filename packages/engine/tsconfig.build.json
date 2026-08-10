@@ -1,0 +1,13 @@
+{
+  "//": "The published module-surface emit (dist/*.js + .d.ts), bundler-mode: engine's supported consumers are Workers embedders who build through wrangler or esbuild, so relative specifiers stay extensionless and the dev-model Text module stays importable. Include is overridden to src only — the base config includes test/**, and an emitted test file under rootDir: src is a TS6059 error. The daemon tree keeps its own nodenext emit (tsconfig.daemon.json); scripts/build.mjs runs both and asserts the one shared output file (dist/credential-guard.js) is identical across them. No source maps: files is [\"dist\"], and a map naming a file the tarball does not contain is worse than no map.",
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    "noEmit": false,
+    "declaration": true,
+    "outDir": "dist",
+    "rootDir": "src"
+  },
+  "include": ["src/**/*.ts"]
+}

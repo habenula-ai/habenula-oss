@@ -1,0 +1,18 @@
+{
+  "//": "Typechecks the Node-only schema codegen (src/data/codegen/*). Separate from the Workers tsconfig because generate.ts uses node:sqlite/node:fs and .ts-extension imports run under tsx. The pure modules (templates, extract-check-enums) are also checked by the main config via test imports.",
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "ES2022",
+    "moduleResolution": "bundler",
+    "allowImportingTsExtensions": true,
+    "lib": ["ES2022"],
+    "types": ["node"],
+    "strict": true,
+    "noUncheckedIndexedAccess": true,
+    "noEmit": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "isolatedModules": true
+  },
+  "include": ["src/data/codegen/**/*.ts", "src/data/ddl.ts"]
+}

@@ -1,0 +1,76 @@
+#!/usr/bin/env bash
+# Pre-commit hook. Three tiers, because the expensive checks and the copy checks
+# guard different file populations.
+#
+#   staged code (.ts/.js/.cjs/.json)  -> just pre-commit   (lint, typecheck, tests, all guards)
+#   staged .mjs, no code         -> just oss-guards + just mjs-test   (the copy guards, plus the plain-Node unit tests)
+#   staged copy only             -> just oss-guards   (copy + confidentiality + REUSE guards; packs the tree and lints it, ~20s)
+#   nothing staged               -> nothing
+#
+# The second and third tiers exist for one reason: a code-only filter silently
+# excluded the very changes some guards are for.
+#
+# The copy tier came first. The internal-terms scanner reads .md/.html/.txt/.xml
+# and shipped config; under the old filter a commit touching only documentation
+# never invoked it, so the gate could not fire on its own target population —
+# and its own wiring commit was exactly such a commit.
+#
+# The .mjs tier is the same failure one file extension over. The repo's
+# plain-Node tooling — oss/ and qa/ — is all .mjs, which `.ts|.js|.json` does
+# not match, so a commit touching only that tooling took the copy tier and ran
+# none of its tests. Widening the code filter to .mjs would have been the wrong
+# fix: it buys the tests at the price of lint, typecheck, and tests for all
+# eight packages, minutes for a change that touches no package. This tier runs
+# the tests alone, in under a second.
+#
+# `.cjs` IS in the code tier, and that is the same failure a third time: the
+# thirteen repo guards under scripts/ are .cjs, which `.ts|.js|.json` also fails
+# to match, so a commit that edited a gate took the copy tier and never executed
+# the gate it edited. The .mjs reasoning does not transfer — a .cjs file here is
+# a guard invoked by the package lints and by oss-guards, so the thing that
+# exercises an edit to one IS the full run. Paying minutes to change a gate is
+# the right trade.
+#
+# Install via: just setup
+# Skip (emergency only): git commit --no-verify
+
+set -euo pipefail
+
+STAGED_ALL=$(git diff --cached --name-only --diff-filter=ACM || true)
+
+if [ -z "$STAGED_ALL" ]; then
+  exit 0
+fi
+
+STAGED_CODE=$(printf '%s\n' "$STAGED_ALL" | grep -E '\.(ts|js|cjs|json)$' || true)
+STAGED_MJS=$(printf '%s\n' "$STAGED_ALL" | grep -E '\.mjs$' || true)
+
+if ! command -v just &> /dev/null; then
+  echo "ERROR: 'just' is required. Install via: mise install"
+  exit 1
+fi
+
+# oss-guards and mjs-test drive oss/, qa/ and repo-wide guard tooling that lives
+# only in this repository, not in the published copy that installs this same
+# hook. Run each only where it is defined, so a copy-only or .mjs-only commit
+# passes on the published copy instead of aborting on a missing recipe. `just
+# pre-commit` (the code tier) exists in both and is called directly.
+run_if_present() {
+  if just --show "$1" >/dev/null 2>&1; then
+    just "$1"
+  else
+    echo "Pre-commit: '$1' is not defined in this checkout — skipping."
+  fi
+}
+
+if [ -n "$STAGED_CODE" ]; then
+  echo "Pre-commit: running checks on staged changes..."
+  just pre-commit
+elif [ -n "$STAGED_MJS" ]; then
+  echo "Pre-commit: plain-Node tooling change — running the copy guards and the .mjs tests..."
+  run_if_present oss-guards
+  run_if_present mjs-test
+else
+  echo "Pre-commit: copy-only change — running the copy guards..."
+  run_if_present oss-guards
+fi

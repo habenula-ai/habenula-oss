@@ -1,0 +1,4 @@
+# Compiled Touch ID presence helper — local build artifact,
+# never committed. Also keeps it out of any future npm tarball (no `files`
+# allowlist, so npm packing falls back to this file).
+native/presence/bin/

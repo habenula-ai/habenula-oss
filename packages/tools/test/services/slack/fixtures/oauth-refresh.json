@@ -1,0 +1,13 @@
+{
+  "ok": true,
+  "access_token": "scrubbed-rotating-user-access-token-rotated",
+  "token_type": "user",
+  "scope": "channels:read,groups:read,channels:history,groups:history,chat:write",
+  "expires_in": 43200,
+  "refresh_token": "scrubbed-user-refresh-token-rotated",
+  "team": {
+    "id": "T0000000000",
+    "name": "scrubbed-workspace"
+  },
+  "user_id": "U0000000000"
+}

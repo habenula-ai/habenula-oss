@@ -1,0 +1,33 @@
+{
+  "name": "habenula",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Habenula on npm — `npx habenula` runs the Habenula CLI, and this package's install carries the engine, so `npx habenula up` starts a governed local agent engine in one command.",
+  "license": "AGPL-3.0-only",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/habenula-ai/habenula-oss.git",
+    "directory": "packages/habenula"
+  },
+  "engines": {
+    "node": ">=22.22.1"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "bin": {
+    "habenula": "bin.js"
+  },
+  "files": [
+    "bin.js"
+  ],
+  "dependencies": {
+    "@habenula-ai/cli": "1.0.0",
+    "@habenula-ai/engine": "1.0.0"
+  },
+  "devDependencies": {
+    "eslint": "10.7.0",
+    "typescript-eslint": "8.64.0"
+  }
+}

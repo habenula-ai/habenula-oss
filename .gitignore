@@ -1,0 +1,23 @@
+node_modules/
+dist/
+.wrangler/
+.dev.vars
+.env
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Per-developer mise overrides (mise convention; never team-shared)
+.mise.local.toml
+
+# Key material must never be committed. Deliberately broad: a test fixture that must be
+# tracked needs an explicit un-ignore line here, so adding one is a reviewed change.
+*.pem
+*.key

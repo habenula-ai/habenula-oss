@@ -1,0 +1,54 @@
+name: Bug report
+description: Something in the engine, CLI, or an integration misbehaves.
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for the report. For security vulnerabilities, **do not open an
+        issue** — email security@habenula.ai (see SECURITY.md).
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened
+      description: What you did, what you expected, and what happened instead.
+      placeholder: |
+        1. Started the engine with `just dev`
+        2. Ran `habenula connect gmail`
+        3. ...
+    validations:
+      required: true
+  - type: textarea
+    id: version
+    attributes:
+      label: Version
+      description: >
+        Release version(s) or the snapshot's `Private-RevId` (first line of
+        `git log -1` on this repo), plus your OS and Node version.
+      placeholder: |
+        @habenula-ai/engine@0.1.0, @habenula-ai/cli@0.1.0
+        macOS 15, node 22.22.1
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs / output
+      description: >
+        Relevant terminal output, engine logs, or audit-log entries. Redact
+        anything sensitive — tokens, email contents, real account IDs.
+      render: text
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      options:
+        - engine (runtime / governance / audit)
+        - cli
+        - integrations (tools / OAuth)
+        - credentials
+        - self-hosting / setup
+        - docs
+        - other
+    validations:
+      required: true

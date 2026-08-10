@@ -1,0 +1,47 @@
+{
+  "name": "@habenula-ai/cli",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Habenula CLI client — drive a governed agent, inspect and verify the audit log, and manage grants and spending caps.",
+  "license": "AGPL-3.0-only",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/habenula-ai/habenula-oss.git",
+    "directory": "packages/cli"
+  },
+  "engines": {
+    "node": ">=22.22.1"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "bin": {
+    "habenula": "dist/index.js"
+  },
+  "files": [
+    "dist",
+    "NOTICE"
+  ],
+  "scripts": {
+    "start": "tsx src/bin.ts",
+    "build": "node build.mjs",
+    "prepare": "node build.mjs",
+    "prepublishOnly": "node build.mjs",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@habenula-ai/audit": "1.0.0",
+    "@habenula-ai/contracts": "1.0.0",
+    "@types/node": "26.1.2",
+    "commander": "14.0.3",
+    "esbuild": "0.28.1",
+    "eslint": "10.7.0",
+    "tsx": "4.22.4",
+    "typescript": "5.8.3",
+    "typescript-eslint": "8.64.0",
+    "vitest": "4.1.10",
+    "zod": "4.4.3"
+  }
+}

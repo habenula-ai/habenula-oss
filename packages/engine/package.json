@@ -1,0 +1,58 @@
+{
+  "name": "@habenula-ai/engine",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Habenula agent runtime engine — OSS core (governance pipeline, audit log, tool execution).",
+  "license": "AGPL-3.0-only",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/habenula-ai/habenula-oss.git",
+    "directory": "packages/engine"
+  },
+  "engines": {
+    "node": ">=22.22.1"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "bin": {
+    "habenula-engine": "dist/daemon/index.js"
+  },
+  "files": [
+    "dist",
+    "wrangler.toml",
+    "SECURITY.md",
+    "NOTICE"
+  ],
+  "scripts": {
+    "dev": "wrangler dev",
+    "build": "node scripts/build.mjs",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "0.91.1",
+    "@cloudflare/workers-types": "5.20260715.1",
+    "@habenula-ai/audit": "1.0.0",
+    "@habenula-ai/contracts": "1.0.0",
+    "@habenula-ai/credentials": "1.0.0",
+    "@habenula-ai/governance": "1.0.0",
+    "@habenula-ai/tools": "1.0.0",
+    "@modelcontextprotocol/sdk": "1.29.0",
+    "agents": "0.17.4",
+    "miniflare": "4.20260710.0",
+    "zod": "4.4.3",
+    "zod-mcp": "npm:zod@3.25.76"
+  },
+  "devDependencies": {
+    "@cloudflare/vitest-pool-workers": "0.18.5",
+    "@types/node": "26.1.2",
+    "eslint": "10.7.0",
+    "tsx": "4.22.4",
+    "typescript": "5.8.3",
+    "typescript-eslint": "8.64.0",
+    "vitest": "4.1.10",
+    "wrangler": "4.111.0"
+  }
+}

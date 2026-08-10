@@ -1,0 +1,18 @@
+{
+  "//": "Typechecks and compiles the Node-only habenula-engine daemon (src/daemon/*). Separate from the Workers tsconfig because the daemon runs under plain Node against miniflare — node types, nodenext resolution, .js-extension relative imports. The Justfile gate runs it with --noEmit; the container builder stage runs it emitting (dist/daemon/ plus the imported credential-guard).",
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "nodenext",
+    "moduleResolution": "nodenext",
+    "lib": ["ES2022"],
+    "types": ["node"],
+    "strict": true,
+    "noUncheckedIndexedAccess": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "isolatedModules": true,
+    "outDir": "dist",
+    "rootDir": "src"
+  },
+  "include": ["src/daemon/**/*.ts"]
+}

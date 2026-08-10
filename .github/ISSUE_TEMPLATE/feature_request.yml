@@ -1,0 +1,27 @@
+name: Feature request
+description: Propose a capability, integration, or governance control.
+labels: ["enhancement"]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: What are you trying to do that Habenula doesn't support today?
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed behavior
+      description: >
+        What should happen instead? For new integrations: which service, and
+        which verbs/nouns would agents need.
+    validations:
+      required: true
+  - type: textarea
+    id: governance
+    attributes:
+      label: Governance considerations
+      description: >
+        Optional — how should this interact with permissions, audit, spending
+        limits, or the kill switch? (It's fine to leave this to us.)

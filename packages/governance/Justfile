@@ -1,0 +1,31 @@
+# Habenula governance package (pure policy evaluator + audit hash chain) recipes
+
+# Show available commands
+default:
+    @just --list
+
+# Run all tests (node required — @cloudflare/vitest-pool-workers is incompatible with the bun runtime)
+test:
+    npx vitest run
+
+# Run tests in watch mode (node required — see above)
+test-watch:
+    npx vitest
+
+# Emit the published tarball surface: dist/*.js + .d.ts (tsconfig.build.json)
+build:
+    npx tsc -p tsconfig.build.json
+
+# TypeScript strict type check
+typecheck:
+    npx tsc --noEmit
+
+# ESLint + dependency pin check + pure-function guard (Hard Invariant #2)
+lint:
+    npx eslint src/ test/
+    node ../../scripts/check-pinned-deps.cjs
+    node ../../scripts/check-governance-purity.cjs
+
+# All pre-commit checks: lint, typecheck, test
+pre-commit: lint typecheck test
+    @echo "Governance checks passed."

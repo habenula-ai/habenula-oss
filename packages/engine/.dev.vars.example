@@ -1,0 +1,104 @@
+# Habenula engine configuration for `wrangler dev` — the options catalog.
+# Copy this file to `packages/engine/.dev.vars` and edit that copy. Never
+# commit `.dev.vars`: it holds real secrets.
+#
+# This file documents the WRANGLER DEV run path. The container run path is
+# separate and reads `.env` at the repository root instead — see
+# `.env.example`. Every variable below is read at startup, so restart the
+# engine after any change.
+#
+# Uncomment only the lines you need. Full inventory, with what each value is
+# for: docs/connect/_index.md.
+
+# --- Core -------------------------------------------------------------------
+
+# REQUIRED — the engine fails closed without a real key: every route except
+# /api/health returns 503 on no key, a malformed key, or one of the publicly
+# known dev placeholder keys.
+# Generate with: openssl rand -hex 32
+CREDENTIAL_ENCRYPTION_KEY=your-64-char-hex-key-here
+
+# REQUIRED for the interactive REPL — the caller token for the trusted
+# /internal/mcp drive surface. The interactive
+# conversation (chat, resolve, status) drives over /internal/mcp, which fails
+# closed: unset ⇒ every request 401s, so the demo dies at the first turn. The
+# CLI must send the SAME value via HABENULA_INTERNAL_MCP_TOKEN.
+# Generate with: openssl rand -hex 32
+INTERNAL_MCP_TOKEN=your-64-char-hex-token-here
+
+# Chat calls your model provider, Anthropic by default. Uncomment this before
+# the REPL's first message. For a non-Anthropic backend, see "LLM provider" below.
+# Create a key at https://console.anthropic.com/ and paste it here.
+# The governance loop over the mock connector needs no key at all.
+# Leave the line commented out rather than blank when you have no key: an
+# empty ANTHROPIC_API_KEY= counts as set and blocks the LLM_API_KEY fallback.
+#ANTHROPIC_API_KEY=
+
+# Optional — loopback guard. Any value except `false` rejects a request whose
+# Host is not loopback. Set it to `false` when an OAuth callback arrives
+# through a tunnel or any other public origin (Slack needs this locally).
+#LOCALHOST_ONLY=false
+
+# --- LLM provider -----------------------------------------------------------
+
+# Optional — use a non-Anthropic model: any OpenAI-compatible backend
+# (Ollama, llama.cpp, vLLM, hosted gateways). Leave all four unset to use
+# Anthropic with ANTHROPIC_API_KEY above.
+# LLM_ENDPOINT is the base URL — /chat/completions is appended.
+# LLM_API_KEY only if the backend requires one.
+#LLM_PROVIDER=openai-compatible
+#LLM_ENDPOINT=
+#LLM_MODEL=
+#LLM_API_KEY=
+
+# --- OAuth client credentials -----------------------------------------------
+
+# Optional — one pair per provider you connect. Each pair authorizes the whole
+# provider, so one Google client covers both Gmail and Google Calendar.
+# Registering each app is a walkthrough of its own; start at
+# docs/connect/_index.md. The mock connector needs no pair.
+#GOOGLE_CLIENT_ID=
+#GOOGLE_CLIENT_SECRET=
+#MICROSOFT_CLIENT_ID=
+#MICROSOFT_CLIENT_SECRET=
+#SLACK_CLIENT_ID=
+#SLACK_CLIENT_SECRET=
+#GITHUB_CLIENT_ID=
+#GITHUB_CLIENT_SECRET=
+
+# --- OAuth redirect overrides -----------------------------------------------
+
+# Optional — a stable public origin for the OAuth redirect, set as an ORIGIN
+# only (scheme and host). The engine appends the callback path itself. Without
+# an override the redirect is built from the incoming request URL, which comes
+# out `http://localhost` behind a tunnel — Slack rejects that.
+#
+# Prefer the per-provider form. `<PROVIDER>` is the uppercased OAuth PROVIDER
+# id (GOOGLE, MICROSOFT, SLACK, GITHUB), not the service name you type, so
+# Gmail's override is OAUTH_REDIRECT_BASE_URL_GOOGLE and an
+# OAUTH_REDIRECT_BASE_URL_GMAIL is silently ignored.
+#OAUTH_REDIRECT_BASE_URL_SLACK=https://your-tunnel.example.com
+
+# The global form moves EVERY provider's redirect at once, which forces a
+# re-registration in each provider's console. Prefer the per-provider form.
+#OAUTH_REDIRECT_BASE_URL=
+
+# --- Development options ----------------------------------------------------
+
+# Optional — dev observability. Set to exactly `true` to serve the visual
+# model page at /dev/model, a live graph of the engine's governed state. Any
+# other value, or unset, leaves it and /api/dev/* returning 404. The engine
+# reads this at start, so restart `wrangler dev` after changing it. Leave it
+# off unless you are watching the data model: the page and its snapshot API
+# are unauthenticated on loopback, like the rest of the local engine.
+# See docs/guides/development/visual-model.md.
+#VISUAL_MODEL=true
+
+# Optional — debug mode. Set to exactly `true` to serve
+# POST /api/tools/execute, which drives one governed tool call with no
+# conversation behind it. Any other value, or unset, leaves the route
+# returning 404. It is a debugging surface, never an intended feature; the
+# test harnesses are its caller. Leave it off unless you are inspecting the
+# governance pipeline by hand. The engine reads this at start, so restart
+# `wrangler dev` after changing it.
+#DEBUG_MODE=true

@@ -1,0 +1,43 @@
+{
+  "name": "@habenula-ai/tools",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Habenula service catalog and tool registry — Habenula-authored service integrations, their tools, and OAuth provider strategies. Leaf package: one type-only workspace dependency (@habenula-ai/credentials).",
+  "license": "AGPL-3.0-only",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/habenula-ai/habenula-oss.git",
+    "directory": "packages/tools"
+  },
+  "engines": {
+    "node": ">=22.22.1"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "files": [
+    "dist"
+  ],
+  "exports": {
+    ".": "./src/index.ts",
+    "./services/*": "./src/services/*.ts"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@cloudflare/workers-types": "5.20260715.1",
+    "@habenula-ai/credentials": "1.0.0"
+  },
+  "devDependencies": {
+    "@cloudflare/vitest-pool-workers": "0.18.5",
+    "eslint": "10.7.0",
+    "typescript": "5.8.3",
+    "typescript-eslint": "8.64.0",
+    "vitest": "4.1.10",
+    "wrangler": "4.111.0"
+  }
+}

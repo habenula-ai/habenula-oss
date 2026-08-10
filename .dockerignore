@@ -1,0 +1,13 @@
+# Context-root secret-exclusion backstop for the habenula-engine image build
+# The authoritative ignore is the BuildKit-only
+# packages/engine/Dockerfile.dockerignore; this root twin covers a legacy
+# (non-BuildKit) builder, which silently skips the Dockerfile-adjacent form
+# and reads only this file. Keep the two lists identical. **/.env and
+# **/.dev.vars are the load-bearing entries — they keep real secrets out of
+# the build context. Exact names, never .env* — .env.example must ship.
+**/node_modules
+**/.wrangler
+**/dist
+**/.env
+**/.dev.vars
+.git

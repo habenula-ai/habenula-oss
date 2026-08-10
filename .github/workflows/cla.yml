@@ -1,0 +1,70 @@
+# CLA gate for this repository. A contributor who opens a pull request is
+# asked once to sign the Contributor License Agreement; the signature is
+# recorded to the `cla-signatures` branch — a branch the release pipeline never
+# touches, so signatures survive every snapshot. A pull request here is a
+# proposal only and is never merged (see CONTRIBUTING.md). The CLA check gates
+# whether the project may *use* a contribution, not whether it is accepted.
+#
+# Storage: signatures live on the `cla-signatures` branch. That branch must be
+# seeded once, mirror-side, before go-live (an orphan branch holding
+# signatures/version1/cla.json = {"signedContributors": []}). Same-repo branch
+# storage uses the default GITHUB_TOKEN — no PAT or repo secret required.
+#
+# Dependency pin: contributor-assistant/github-action v2.6.1,
+# published 2024-09-26 (latest and stable), pinned by full commit SHA. Re-run
+# the dependency-stability check before bumping.
+name: CLA
+
+on:
+  issue_comment:
+    types: [created]
+  pull_request_target:
+    types: [opened, synchronize]
+
+# Top level is read-only; the four writes the CLA action needs are scoped to
+# the job (job-level permissions replace the top level for that job).
+permissions:
+  contents: read
+
+jobs:
+  cla:
+    runs-on: ubuntu-latest
+    permissions:
+      actions: write
+      contents: write
+      pull-requests: write
+      statuses: write
+    # Dormant until the mirror is public (matches the other overlay security
+    # workflows). On comment events, act only on real pull requests.
+    if: >-
+      !github.event.repository.private &&
+      ((github.event_name == 'pull_request_target') ||
+       (github.event_name == 'issue_comment' &&
+        github.event.issue.pull_request &&
+        (github.event.comment.body == 'recheck' ||
+         github.event.comment.body == 'I have read the Habenula CLA and I hereby sign it')))
+    steps:
+      - name: CLA check
+        uses: contributor-assistant/github-action@ca4a40a7d1004f18d9960b404b97e5f30a505a08 # v2.6.1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          path-to-document: https://github.com/habenula-ai/habenula-oss/blob/main/CLA.md
+          path-to-signatures: signatures/version1/cla.json
+          branch: cla-signatures
+          # Internal maintainers do not sign the community CLA. Add any bot
+          # handles here at go-live.
+          allowlist: 2sat,KVrug,jack-habenula
+          custom-pr-sign-comment: I have read the Habenula CLA and I hereby sign it
+          custom-notsigned-prcomment: |
+            Thank you for your pull request.
+
+            **Before Habenula can use any contribution, you must sign our [Contributor License Agreement](https://github.com/habenula-ai/habenula-oss/blob/main/CLA.md).**
+
+            One note first: this repository is a read-only release mirror, so a pull request here is a **proposal, not a merge** — it will not be merged. If a maintainer accepts your change, it is applied upstream and ships in a later release, and this pull request is then closed.
+
+            To sign, post the comment exactly as shown below. You sign once, and it covers your future contributions.
+          custom-allsigned-prcomment: |
+            ✅ All contributors have signed the Habenula CLA.
+
+            This pull request will not be merged — it is a proposal. A maintainer will review it and, if the change is accepted, apply it upstream; this pull request is then closed with a note.

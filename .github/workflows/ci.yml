@@ -1,0 +1,52 @@
+name: CI
+
+# The packed repo's own CI: one workspace install, then the full
+# lint/typecheck/test suite for all eight packages, leaf-first. Green on every
+# release snapshot is the standing self-host proof — `git clone && npm ci &&
+# just pre-commit` works under Node with no private dependencies
+# — a standing self-host invariant.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+      - uses: jdx/mise-action@e6a8b3978addb5a52f2b4cd9d91eafa7f0ab959d # v4.2.0
+        with:
+          install: true
+          cache: true
+
+      - run: npm ci
+
+      - name: contracts
+        run: just contracts-lint contracts-typecheck contracts-test
+      - name: credentials
+        run: just credentials-lint credentials-typecheck credentials-test
+      - name: governance
+        run: just governance-lint governance-typecheck governance-test
+      - name: audit
+        run: just audit-lint audit-typecheck audit-test
+      - name: tools
+        run: just tools-lint tools-typecheck tools-test
+      - name: engine
+        run: just engine-lint engine-typecheck engine-test
+      - name: cli
+        run: just cli-lint cli-typecheck cli-test cli-build
+      - name: habenula
+        run: just habenula-lint habenula-typecheck habenula-test
+
+      # The published-shape gate: build all seven buildable packages, stage +
+      # transform all eight, pack each once, publint --strict + attw (declared
+      # narrowing only), then the wildcard/bin/consumer tarball smoke tests.
+      # Validate-only — this watches the published shape for months before a
+      # publish can happen.
+      - name: published tarball shape gate
+        run: just oss-verify-tarballs

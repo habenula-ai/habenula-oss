@@ -1,0 +1,36 @@
+# Habenula — local self-host stack.
+# The safe invocation is baked in: the 127.0.0.1 publish scope IS the
+# network boundary. The in-container engine binds 0.0.0.0, and publishing
+# wider than loopback exposes an unauthenticated, credential-holding
+# engine. Do not widen it before engine authentication ships.
+#
+# Settings come from .env in this directory — the runbook
+# (SELF-HOSTING.md, beside this file) walks through creating it.
+
+name: habenula
+
+services:
+  engine:
+    build:
+      context: .
+      dockerfile: packages/engine/Dockerfile
+    ports:
+      - "127.0.0.1:${HABENULA_PORT:-8787}:8787"
+    volumes:
+      - engine-data:/data
+    env_file: .env
+    # HABENULA_PORT means two things and this pins the second one. Above, it is
+    # the HOST port this publish maps from, read from .env by interpolation.
+    # Inside the container it is also the port the engine binds, and there it
+    # must stay 8787 or the publish above would forward to a port nothing
+    # serves. `env_file` would otherwise hand the engine the host value, so this
+    # overrides it — `environment` wins over `env_file` in Compose. Setting
+    # HABENULA_PORT in .env therefore moves the host port only, which is what
+    # the runbook documents.
+    environment:
+      HABENULA_PORT: 8787
+    init: true
+    restart: unless-stopped
+
+volumes:
+  engine-data:

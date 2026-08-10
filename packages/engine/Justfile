@@ -1,0 +1,50 @@
+# Habenula engine (Cloudflare Worker) recipes
+
+# Show available commands
+default:
+    @just --list
+
+# Start local dev server
+dev:
+    npx wrangler dev
+
+# Run all tests
+test:
+    npx vitest run
+
+# Run tests in watch mode
+test-watch:
+    npx vitest
+
+# The engine build: Worker bundle + module surface + daemon, one definition
+# (scripts/build.mjs) shared with the Dockerfile builder and the npm publish path
+build:
+    node scripts/build.mjs
+
+# TypeScript strict type check (Workers runtime + Node-only codegen + Node-only daemon)
+typecheck:
+    npx tsc --noEmit
+    npx tsc --noEmit -p tsconfig.codegen.json
+    npx tsc --noEmit -p tsconfig.daemon.json
+
+# Generate Zod row schemas from the DDL registry (via pinned tsx; --no-install
+# fails fast rather than fetching an unpinned tsx — Hard Invariant #4)
+codegen:
+    npx --no-install tsx src/data/codegen/generate.ts
+
+# ESLint + dependency pin check + schema freshness + import-boundary guard + descriptor-drift guard
+#
+# Every check here is scoped to this package. Repository-wide guards run from
+# the root Justfile instead, so that a change to another package still runs
+# them — hanging a repo-wide gate off one package's lint means any PR that
+# does not touch that package skips it.
+lint:
+    npx eslint src/ test/
+    node ../../scripts/check-pinned-deps.cjs
+    node ../../scripts/check-schemas-fresh.cjs
+    node ../../scripts/check-import-boundary.cjs
+    node ../../scripts/check-contract-descriptors.cjs
+
+# All pre-commit checks: codegen (so freshness passes), lint, typecheck, test
+pre-commit: codegen lint typecheck test
+    @echo "Engine checks passed."

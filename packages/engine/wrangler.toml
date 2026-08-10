@@ -1,0 +1,67 @@
+name = "habenula"
+main = "src/index.ts"
+compatibility_date = "2025-04-01"
+compatibility_flags = ["nodejs_compat"]
+
+# Durable Object bindings
+[[durable_objects.bindings]]
+name = "USER_AGENT"
+class_name = "UserAgent"
+
+[[migrations]]
+tag = "v1"
+new_sqlite_classes = ["UserAgent"]
+
+# Non-secret runtime config ONLY. Secret-bearing names —
+# CREDENTIAL_ENCRYPTION_KEY, ANTHROPIC_API_KEY, LLM_API_KEY, INTERNAL_MCP_TOKEN,
+# and every *_CLIENT_ID / *_CLIENT_SECRET — MUST NOT appear in [vars]: a [vars]
+# entry deploys as a plain_text binding and OVERWRITES a same-named secret on
+# every `wrangler deploy`, and a CREDENTIAL_ENCRYPTION_KEY placeholder here
+# would publish a world-known key. Source
+# every secret from packages/engine/.dev.vars locally and `wrangler secret put`
+# (or a deploy workflow's `secrets:`) in production. Missing secrets fail loud, not
+# open: no real CREDENTIAL_ENCRYPTION_KEY → 503 on every route but /api/health;
+# no INTERNAL_MCP_TOKEN → 401 on /internal/mcp.
+[vars]
+# Provider seam: selection is deployment-static. Unset = the
+# Anthropic default (claude-sonnet-4-6, ANTHROPIC_API_KEY). To point at any
+# OpenAI-compatible backend (hosted, gateway, or local runtime), set:
+#   LLM_PROVIDER = "openai-compatible"
+#   LLM_MODEL    = "<model id>"                    # required for this provider
+#   LLM_ENDPOINT = "http://localhost:8080/v1"      # base URL, non-secret
+# LLM_API_KEY is a credential — set via wrangler secret put (or .dev.vars),
+# never here. Omit it entirely for keyless local runtimes. When reverting a
+# deploy to the Anthropic default, delete the stale LLM_API_KEY secret —
+# ANTHROPIC_API_KEY takes precedence for the anthropic provider, but leaving
+# a dead third-party key configured invites confusion.
+# Localhost hardening: loopback Host/Origin guard.
+# A hosted deploy must explicitly set "false".
+LOCALHOST_ONLY = "true"
+# Dev visual model: /dev/model + /api/dev/*. Fail-closed — only exactly
+# "true" enables, and the surface ships OFF by default.
+# Opt in for local dev by adding VISUAL_MODEL=true to .dev.vars, not here.
+# Debug mode: POST /api/tools/execute. Fail-closed the same way —
+# only exactly "true" enables, and the route ships OFF by default (404).
+# It drives a governed tool call with no conversation behind it; it is a
+# debugging surface, never an intended feature, and the test harnesses are
+# its only intended caller. Opt in for local debugging by
+# adding DEBUG_MODE=true to .dev.vars, not here.
+# Stable public origin for OAuth redirect URIs. Leave unset for a direct
+# localhost connect (Google allows http://localhost). Set it to your tunnel's
+# HTTPS origin for local Slack connect — Slack rejects non-HTTPS redirects.
+# The per-provider form (OAUTH_REDIRECT_BASE_URL_SLACK / _GOOGLE) overrides this
+# global one for that provider, so you can tunnel Slack while leaving Google on
+# localhost. Resolution: _<PROVIDER> → global → request URL.
+# Set in .dev.vars, not here, e.g.:
+#   OAUTH_REDIRECT_BASE_URL_SLACK=https://<your-tunnel>.trycloudflare.com
+# INTERNAL_MCP_TOKEN is the caller token for the trusted /internal/mcp drive
+# surface. It is a SECRET — set via `wrangler secret put
+# INTERNAL_MCP_TOKEN` (or .dev.vars for local dev), NEVER here as a plaintext
+# var. Unset fails closed: /internal/mcp 401s every request. The CLI must send
+# the same value via HABENULA_INTERNAL_MCP_TOKEN.
+
+# Text module rule: the vendored cytoscape dist (dev-model page) imports as a string.
+[[rules]]
+type = "Text"
+globs = ["**/*.txt"]
+fallthrough = true

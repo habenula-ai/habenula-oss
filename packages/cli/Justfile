@@ -1,0 +1,59 @@
+# Habenula CLI recipes
+
+# Show available commands
+default:
+    @just --list
+
+# Run the CLI from source (tsx runs TypeScript directly on Node)
+dev *ARGS:
+    npx tsx src/bin.ts {{ARGS}}
+
+# Bundle the CLI for Node: dist/index.js with a node shebang
+build:
+    node build.mjs
+
+# Run all tests
+test:
+    npx vitest run
+
+# Run tests in watch mode
+test-watch:
+    npx vitest
+
+# TypeScript strict type check
+typecheck:
+    npx tsc --noEmit
+
+# ESLint + dependency pin check
+lint:
+    npx eslint src/ test/
+    node ../../scripts/check-pinned-deps.cjs
+
+# All pre-commit checks: lint, typecheck, test, build (so the bundle never rots)
+pre-commit: lint typecheck test build
+    @echo "CLI checks passed."
+
+# Host-run lifecycle validation: `habenula up` / `habenula down` end to end,
+# against the built CLI and the built engine daemon, in a temporary persist
+# root on a non-default port. Build both inputs first (`just cli-build` and
+# `just engine-build` from the repository root); the harness builds nothing
+# itself and names any missing input.
+validate-host:
+    node scripts/validate-host-run.mjs
+
+# Build the Touch ID presence helper. macOS only; not part of
+# pre-commit — tests use an injected fake, and a missing binary is a graceful
+# no-op. The binary is a local POC artifact (gitignored, never committed);
+# code-signing + notarization are required before any distribution (deferred).
+build-presence-helper:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    if [ "$(uname -s)" != "Darwin" ]; then
+        echo "build-presence-helper is macOS-only (Touch ID)." >&2
+        exit 1
+    fi
+    # bin/ is gitignored, so it does not exist on a fresh checkout, and
+    # `swiftc -o` does not create the output directory.
+    mkdir -p native/presence/bin
+    swiftc native/presence/main.swift -o native/presence/bin/habenula-presence
+    echo "Built native/presence/bin/habenula-presence"

@@ -1,0 +1,14 @@
+# Build-context hygiene for the habenula-engine image.
+# The context is the TREE ROOT (the tree-root compose.yaml passes `.`), so
+# every nested pattern needs the **/ prefix. **/.env and **/.dev.vars are load-bearing:
+# they keep the operator's real CREDENTIAL_ENCRYPTION_KEY (the env_file at
+# the tree root, .env) out of the build context. Exact names, never .env* —
+# .env.example must ship. This Dockerfile-adjacent form is honored only under
+# BuildKit (the Dockerfile's # syntax line forces it); this tree also ships a
+# context-root .dockerignore backstop for legacy builders.
+**/node_modules
+**/.wrangler
+**/dist
+**/.env
+**/.dev.vars
+.git

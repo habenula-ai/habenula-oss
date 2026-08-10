@@ -1,0 +1,19 @@
+{
+  "ok": true,
+  "app_id": "A0000000000",
+  "authed_user": {
+    "id": "U0000000000",
+    "scope": "channels:read,groups:read,channels:history,groups:history,chat:write",
+    "access_token": "scrubbed-rotating-user-access-token-exchange",
+    "token_type": "user",
+    "refresh_token": "scrubbed-user-refresh-token-exchange",
+    "expires_in": 43200
+  },
+  "team": {
+    "id": "T0000000000",
+    "name": "scrubbed-workspace"
+  },
+  "enterprise": null,
+  "is_enterprise_install": false,
+  "access_token": ""
+}

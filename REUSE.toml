@@ -1,0 +1,112 @@
+version = 1
+
+# Licensing metadata for files that do not carry an SPDX header.
+# Source files carry their own headers; these annotations deliberately stay
+# narrow so `reuse lint` still fails when a source file is missing one.
+# Everything is AGPL-3.0-only except packages/audit (MIT) and vendored
+# third-party code, which keeps its own copyright.
+
+# --- README demo media (the recorded session: the cast is the source, the
+# GIF its render). Listed file-by-file on purpose: a new asset must be
+# annotated deliberately, never swept in by a directory glob ---
+[[annotations]]
+path = [
+  "assets/demo.cast",
+  "assets/demo.gif",
+]
+SPDX-FileCopyrightText = "2026 Habenula, Inc."
+SPDX-License-Identifier = "AGPL-3.0-only"
+
+# --- Repo-root metadata and configuration ---
+[[annotations]]
+path = [
+  "*.md",
+  "Justfile",
+  "package.json",
+  "package-lock.json",
+  "compose.yaml",
+  ".npmrc",
+  ".gitignore",
+  ".dockerignore",
+  ".mise.toml",
+  ".changeset/**",
+  ".github/**",
+  ".githooks/**",
+  "scripts/**",
+]
+SPDX-FileCopyrightText = "2026 Habenula, Inc."
+SPDX-License-Identifier = "AGPL-3.0-only"
+
+# --- Package metadata, tests, and docs (AGPL packages) ---
+[[annotations]]
+path = [
+  "packages/*/package.json",
+  "packages/*/tsconfig.json",
+  "packages/*/tsconfig.*.json",
+  "packages/*/wrangler.toml",
+  "packages/*/Justfile",
+  "packages/*/README.md",
+  "packages/*/CHANGELOG.md",
+  "packages/*/NOTICE",
+  "packages/*/.gitignore",
+  "packages/*/.dev.vars.example",
+  "packages/*/eslint.config.mjs",
+  "packages/*/vitest.config.ts",
+  "packages/*/test/**",
+  "packages/*/scripts/**",
+  "packages/cli/native/**",
+  "packages/cli/build.mjs",
+  "packages/engine/.env.example",
+  "packages/engine/Dockerfile",
+  "packages/engine/Dockerfile.dockerignore",
+  "packages/engine/SECURITY.md",
+  "packages/engine/src/dev-model/vendor/README.md",
+]
+SPDX-FileCopyrightText = "2026 Habenula, Inc."
+SPDX-License-Identifier = "AGPL-3.0-only"
+
+# --- Documentation content (each package's docs/ tree) is CC-BY-4.0, not
+# AGPL: the prose is meant to be reused and adapted freely as long as Habenula
+# is credited, while the code stays copyleft and the marks stay protected
+# (TRADEMARKS.md). Scope is the docs trees only — the mirror-root governance and
+# legal files (LICENSE, CLA, TRADEMARKS, CONTRIBUTING, …) keep the repo licence.
+# Only engine and cli carry a docs/ tree; audit has none, so this never collides
+# with the MIT rows below. Sub-file grant not expressible here: the code
+# snippets and examples embedded in these docs are offered under MIT (a
+# copyright-holder's supplemental grant, authoritative in README §License and
+# LICENSE_FAQ). REUSE/SPDX is file-granular, so this is documented, not
+# annotated — the .md files remain tagged CC-BY-4.0 below ---
+[[annotations]]
+path = [
+  "packages/*/docs/**",
+]
+SPDX-FileCopyrightText = "2026 Habenula, Inc."
+SPDX-License-Identifier = "CC-BY-4.0"
+
+# --- packages/audit is MIT (the embeddable verifier; listed after the
+# generic package globs so these win for audit's files). CHANGELOG.md and
+# .gitignore do not exist yet — forward-looking rows on purpose, so a
+# changesets-created CHANGELOG lands MIT instead of being caught by the
+# generic AGPL glob above ---
+[[annotations]]
+path = [
+  "packages/audit/package.json",
+  "packages/audit/tsconfig.json",
+  "packages/audit/tsconfig.*.json",
+  "packages/audit/wrangler.toml",
+  "packages/audit/Justfile",
+  "packages/audit/README.md",
+  "packages/audit/CHANGELOG.md",
+  "packages/audit/.gitignore",
+  "packages/audit/eslint.config.mjs",
+  "packages/audit/vitest.config.ts",
+  "packages/audit/test/**",
+]
+SPDX-FileCopyrightText = "2026 Habenula, Inc."
+SPDX-License-Identifier = "MIT"
+
+# --- Vendored third-party code ---
+[[annotations]]
+path = ["packages/engine/src/dev-model/vendor/cytoscape-3.34.0.min.js.txt"]
+SPDX-FileCopyrightText = "2016-2026 The Cytoscape Consortium"
+SPDX-License-Identifier = "MIT"

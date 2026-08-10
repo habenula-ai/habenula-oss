@@ -1,0 +1,9 @@
+# Test-only wrangler config: @cloudflare/vitest-pool-workers reads it to shape
+# the workerd runtime the tests run in (hard invariant 5 — real runtime, no
+# mocks). This package deploys nothing; it ships as source inside the engine
+# Worker, so the compatibility settings here mirror the engine's. nodejs_compat
+# is required: the entry hash uses node:crypto's synchronous createHash (see
+# eslint.config.mjs for why Web Crypto can't be used there).
+name = "habenula-audit"
+compatibility_date = "2025-04-01"
+compatibility_flags = ["nodejs_compat"]

@@ -1,0 +1,179 @@
+# Publish the eight packages to npm — the mirror's one irreversible workflow.
+#
+# This filename is a reviewed constant: npm's per-package trusted-publisher
+# config names it, so renaming or moving the file breaks publishing until the
+# npm side is updated. The two input names below are load-bearing the same
+# way: the release flow that dispatches this workflow passes them by name, and
+# it is the only caller a release depends on.
+#
+# No ref trigger, deliberately. The release flow dispatches this workflow
+# once per release (one workflow_dispatch call carrying the release ref), so
+# one release fires one run — the eight per-package tag pushes would fire a
+# tag-triggered workflow eight times. Running on the default branch is also
+# what lets the npm-publish environment stay restricted to that branch, and a
+# dispatch is an explicit, authenticated API call — the release automation or
+# a maintainer with write access; no fork, no event, and no one else can
+# start it. Nothing below reads a github.event field a fork could control.
+#
+# The workflow runs FROM the default branch and builds the release it was
+# dispatched for, which are two different commits. Every release snapshot
+# carries a `Private-RevId: <revision>` trailer, so the resolve step below
+# turns the release-ref input into the snapshot commit that shipped it and
+# checks that out. Building the branch head instead would be wrong whenever
+# the head has moved on: a run that was queued or re-dispatched behind a
+# newer release would build the newer bytes, publish the newer versions, and
+# leave its own versions tagged and released with no tarball on the registry
+# — two green runs and a permanent hole. Resolving also means the release's
+# own publish driver and its own lockfile are the ones exercised, not a
+# later revision's.
+#
+# The credential sits below the trigger: the job's `environment: npm-publish`
+# is what every trusted publisher names, so a job outside it cannot mint a
+# publish identity — mirror write access alone is not enough to publish. In
+# steady state no npm token exists anywhere: the OIDC exchange (id-token:
+# write) mints a per-publish identity, and npm generates and uploads the
+# provenance attestation itself, so the driver passes no provenance flag.
+#
+# Two modes, chosen by the dry-run input. A real publish (dry-run: false)
+# runs the full guarded walk and uploads. A preview (dry-run: true, the
+# default) runs the same walk, hands npm publish its --dry-run flag, and
+# uploads nothing: the run summary carries a would-publish manifest — each
+# package's version, packed file count, and unpacked size — and reports
+# which versions the registry already holds (a skip on a real run, never an
+# error). Mode is tied to repository: any copy of this repository may
+# preview, and only habenula-ai/habenula-oss may really publish. The guard
+# step below refuses a real publish anywhere else, and npm's
+# trusted-publisher configuration names the canonical repository too, so a
+# publish from any other copy fails structurally even without the guard.
+
+name: publish-npm
+
+run-name: "npm publish for release ${{ inputs.release-ref }}${{ inputs.dry-run && ' (dry-run)' || '' }}"
+
+on:
+  workflow_dispatch:
+    inputs:
+      release-ref:
+        description: "Release revision this publish ships. Load-bearing: the run builds the snapshot commit carrying this Private-RevId, not the branch head"
+        required: true
+        type: string
+      # Safe default: a fat-fingered manual dispatch previews instead of
+      # publishing. The release flow passes dry-run: false explicitly.
+      dry-run:
+        description: "Preview: the full guarded walk, a would-publish manifest in the run summary, and no upload"
+        required: false
+        type: boolean
+        default: true
+
+# One publish at a time, never cancelled mid-walk: the guards make a re-run
+# reconcile, so belt-and-braces here is queueing, not cancellation.
+concurrency:
+  group: npm-publish
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    environment: npm-publish
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      # Mode is tied to repository, before anything else runs: any copy of
+      # this repository may preview, and only the canonical repository may
+      # really publish. This makes "another copy can never publish" a
+      # property of the workflow rather than of operator care; npm's
+      # trusted-publisher configuration backs it independently by naming the
+      # canonical repository.
+      - name: Only the canonical repo may publish
+        if: ${{ !inputs.dry-run && github.repository != 'habenula-ai/habenula-oss' }}
+        run: |
+          echo "::error::A real npm publish may run only from habenula-ai/habenula-oss. This copy may preview (dry-run: true) but never publish."
+          exit 1
+
+      # Full history: the resolve step below searches commit trailers, and a
+      # shallow clone would find only the newest release's.
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+        with:
+          fetch-depth: 0
+
+      # Build the release that was dispatched, not the branch head. The
+      # snapshot commit for a release carries `Private-RevId: <revision>`, so
+      # the input resolves to exactly one commit in this branch's history;
+      # searching HEAD's history is also what makes the result inherently an
+      # ancestor of the branch, so no separate ancestry assertion is needed.
+      # A checkout of that commit moves the whole tree, the publish driver
+      # included, so the release's own machinery publishes the release's own
+      # bytes.
+      #
+      # Unresolvable splits by mode. A real publish aborts: the alternative
+      # is uploading bytes nobody asked for. A preview warns and builds HEAD,
+      # so a maintainer can still preview the branch head by hand. The
+      # release rehearsal takes the success path like a real run does, because
+      # a rehearsal's own snapshot lands before its preview is dispatched.
+      - name: Resolve the release snapshot commit
+        env:
+          RELEASE_REF: ${{ inputs.release-ref }}
+        run: |
+          snapshot=$(git log --fixed-strings --grep "Private-RevId: $RELEASE_REF" -n1 --format=%H)
+          if [ -z "$snapshot" ]; then
+            if [ "${{ inputs.dry-run }}" = "true" ]; then
+              echo "::warning::no commit in this branch's history carries Private-RevId $RELEASE_REF — previewing the branch head ($(git rev-parse HEAD)) instead."
+              exit 0
+            fi
+            echo "::error::no commit in this branch's history carries Private-RevId $RELEASE_REF, so the release this publish was dispatched for cannot be identified. Refusing to publish: building the branch head could ship a different release's bytes under this release's versions."
+            exit 1
+          fi
+          echo "Release $RELEASE_REF landed as $snapshot — building that commit."
+          git checkout --quiet --detach "$snapshot"
+
+      # mise first (for `just`), setup-node after it — whichever setup runs
+      # last owns the PATH, and this tree's .mise.toml pins Node 22. The
+      # publish job needs Node 24: its bundled npm (11.16.0) clears both the
+      # 11.5.1 trusted-publishing floor and the 11.15.0 floor `npm trust`
+      # needs. Nothing installs over it — an `npm i -g npm` is the shape whose
+      # failure reads as E404 on the publish PUT.
+      - uses: jdx/mise-action@e6a8b3978addb5a52f2b4cd9d91eafa7f0ab959d # v4.2.0
+        with:
+          install: true
+          cache: true
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 24.18.0
+          registry-url: https://registry.npmjs.org
+
+      # Step ordering alone is too subtle to rest a release on. This sits
+      # above `npm ci` because npm ci is the first step that runs the npm
+      # under test — an install resolved by the wrong npm is one of the
+      # failures this assertion exists to catch. It turns a Node shadowed by
+      # mise into a red run rather than an E404 from the registry.
+      - name: Assert the publish toolchain
+        run: |
+          node_version="$(node -v)"
+          npm_version="$(npm -v)"
+          echo "node ${node_version} / npm ${npm_version}"
+          if [ "${node_version}" != "v24.18.0" ]; then
+            echo "ERROR: node is ${node_version}, expected v24.18.0 — setup-node did not win the PATH." >&2
+            exit 1
+          fi
+          floor="11.15.0"
+          if [ "$(printf '%s\n%s\n' "${floor}" "${npm_version}" | sort -V | head -1)" != "${floor}" ]; then
+            echo "ERROR: npm ${npm_version} is below the ${floor} floor." >&2
+            exit 1
+          fi
+
+      - run: npm ci
+
+      # Seven of the eight have a build; the habenula umbrella ships one
+      # plain-JS forwarder and stages as-committed.
+      - name: Build the packages
+        run: just oss-build
+
+      # Stage + transform + shape-check, then the two-pass walk: the guards
+      # settle the publish set before anything publishes, so a re-run after a
+      # partial failure publishes exactly what is missing.
+      - name: Publish (guarded, idempotent)
+        run: node .github/scripts/npm-publish.mjs --publish ${{ inputs.dry-run && '--dry-run' || '' }}

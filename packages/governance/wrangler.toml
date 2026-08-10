@@ -1,0 +1,9 @@
+# Test-only wrangler config: @cloudflare/vitest-pool-workers reads it to shape
+# the workerd runtime the tests run in (hard invariant 5 — real runtime, no
+# mocks). This package deploys nothing; it ships as source inside the engine
+# Worker. Like @habenula-ai/credentials it needs no nodejs_compat: every file
+# here is a pure evaluator, which matches its no-Node ESLint boundary. The one
+# module that needed the flag was the audit hash chain, and that now lives in
+# @habenula-ai/audit.
+name = "habenula-governance"
+compatibility_date = "2025-04-01"

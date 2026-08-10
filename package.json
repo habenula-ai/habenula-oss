@@ -1,0 +1,31 @@
+{
+  "name": "habenula-oss",
+  "version": "0.0.0",
+  "private": true,
+  "license": "AGPL-3.0-only",
+  "workspaces": [
+    "packages/engine",
+    "packages/cli",
+    "packages/contracts",
+    "packages/tools",
+    "packages/credentials",
+    "packages/governance",
+    "packages/audit",
+    "packages/habenula"
+  ],
+  "//overrides": "Load-bearing: pins the MCP SDK's zod to v3, matching the engine's zod-mcp alias. npm hoists contracts' zod v4 to the root, which would otherwise make the SDK's types v4-shaped and blow up engine typecheck with TS2589 (deep instantiation). Do not remove or bump without re-running `just engine-typecheck` on a clean `npm ci` tree.",
+  "//overrides-security": "Load-bearing: patches four packages that miniflare and wrangler depend on at exact or caret-pinned versions, which a bump to those two cannot reach. wrangler 4.109.0 and later require @cloudflare/workers-types v5, while partyserver (a dependency of the Agents SDK) requires v4, so the Cloudflare packages cannot move until the Agents SDK does. Each entry is the patched release for a published advisory in undici, ws, sharp, and esbuild. npm only re-evaluates overrides on a clean tree: after changing them, delete node_modules and package-lock.json before `npm install`, or the old versions silently persist.",
+  "overrides": {
+    "@modelcontextprotocol/sdk": {
+      "zod": "3.25.76"
+    },
+    "undici": "7.28.0",
+    "ws": "8.21.1",
+    "sharp": "0.35.3",
+    "esbuild": "0.28.1"
+  },
+  "devDependencies": {
+    "@arethetypeswrong/cli": "0.18.5",
+    "publint": "0.3.21"
+  }
+}

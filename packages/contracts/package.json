@@ -1,0 +1,39 @@
+{
+  "name": "@habenula-ai/contracts",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Habenula wire contract — every /api/* request and response shape as a Zod schema. Neutral leaf: depends only on zod.",
+  "license": "AGPL-3.0-only",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/habenula-ai/habenula-oss.git",
+    "directory": "packages/contracts"
+  },
+  "engines": {
+    "node": ">=22.22.1"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "files": [
+    "dist"
+  ],
+  "exports": {
+    ".": "./src/index.ts",
+    "./requests": "./src/requests/index.ts",
+    "./responses": "./src/responses/index.ts"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "zod": "4.4.3"
+  },
+  "devDependencies": {
+    "eslint": "10.7.0",
+    "typescript": "5.8.3",
+    "typescript-eslint": "8.64.0"
+  }
+}
