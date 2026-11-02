@@ -1,3 +1,5 @@
+Habenula is now Benya. This repository is frozen at v1.0; Benya's code arrives at https://github.com/benya-oss/benya with version 1.0.
+
 # Habenula
 
 ## The personal agent control harness
